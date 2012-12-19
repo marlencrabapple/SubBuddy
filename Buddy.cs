@@ -410,8 +410,9 @@ namespace SubBuddy
             }
             else
             {
-                start = fdsa[0].IndexOf("url=");
-                fdsa[0] = fdsa[0].Substring(start);
+                // I'm not entirely sure what I was doing here
+                //start = fdsa[0].IndexOf("url=");
+                //fdsa[0] = fdsa[0].Substring(start);
             }
 
             itag = new String[fdsa.Length];
@@ -423,56 +424,57 @@ namespace SubBuddy
 
             i = 0;
 
+            // Why does it seem like Google is designing fixes to thwart -my- program?
             foreach (var dungus in fdsa)
             {
-                if (dungus.StartsWith("url"))
+                itag[i] = dungus.Substring(dungus.IndexOf("itag=") + "itag=".Length);
+                if (itag[i].Contains("\\u0026"))
                 {
-                    itag[i] = dungus.Substring(dungus.LastIndexOf("itag"));
-                    itag[i] = itag[i].Replace("itag=", "");
-                    itag[i] = itag[i].Replace("\"", "");
-                    quality[i] = dungus.Substring(dungus.LastIndexOf("quality"));
-                    quality[i] = quality[i].Substring(quality[i].IndexOf("=") + 1, quality[i].IndexOf("\\"));
-                    quality[i] = quality[i].Replace("\\u0026fa", "");
-                    fallback_host[i] = dungus.Substring(dungus.LastIndexOf("fallback_host"));
-                    fallback_host[i] = fallback_host[i].Substring(fallback_host[i].IndexOf("=") + 1);
-                    fallback_host[i] = fallback_host[i].Substring(0, fallback_host[i].IndexOf("\\"));
-                    type[i] = dungus.Substring(dungus.LastIndexOf("type"));
-                    type[i] = type[i].Substring(type[i].IndexOf("video"), type[i].IndexOf("\\") - 5);
-                    url[i] = dungus.Substring(dungus.IndexOf("url"), dungus.IndexOf("\\"));
-                    url[i] = url[i].Replace("url=", "");
-                    url[i] = Uri.UnescapeDataString(url[i]);
-                    sig[i] = dungus.Substring(dungus.LastIndexOf("sig="));
-                    sig[i] = sig[i].Substring(0, sig[i].LastIndexOf("\\"));
-                    sig[i] = sig[i].Replace("sig=", "signature=");
-                    sig[i] = Uri.UnescapeDataString(sig[i]);
-                    url[i] += "&" + sig[i];
-                    i++;
+                    itag[i] = itag[i].Substring(0,itag[i].IndexOf("\\u0026"));
                 }
-                else if (dungus.StartsWith("itag"))
+
+                quality[i] = dungus.Substring(dungus.IndexOf("quality=") + "quality=".Length);
+                if (quality[i].Contains("\\u0026"))
                 {
-                    itag[i] = dungus.Substring(dungus.IndexOf("itag"));
-                    itag[i] = itag[i].Substring(0, itag[i].IndexOf("\\"));
-                    itag[i] = itag[i].Replace("itag=", "");
-                    itag[i] = itag[i].Replace("\"", "");
-                    quality[i] = dungus.Substring(dungus.LastIndexOf("quality"));
-                    quality[i] = quality[i].Substring(quality[i].IndexOf("=") + 1);
-                    quality[i] = quality[i].Replace("\\u0026fa", "");
-                    fallback_host[i] = dungus.Substring(dungus.LastIndexOf("fallback_host"));
-                    fallback_host[i] = fallback_host[i].Substring(fallback_host[i].IndexOf("=") + 1);
-                    fallback_host[i] = fallback_host[i].Substring(0, fallback_host[i].IndexOf("\\"));
-                    type[i] = dungus.Substring(dungus.LastIndexOf("type"));
-                    type[i] = type[i].Substring(type[i].IndexOf("video"), type[i].IndexOf("\\") - 5);
-                    url[i] = dungus.Substring(dungus.IndexOf("url"), dungus.IndexOf("type"));
-                    url[i] = url[i].Substring(0, url[i].IndexOf("\\"));
-                    url[i] = url[i].Replace("url=", "");
-                    url[i] = Uri.UnescapeDataString(url[i]);
-                    sig[i] = dungus.Substring(dungus.LastIndexOf("sig="));
-                    sig[i] = sig[i].Substring(0, sig[i].LastIndexOf("\\"));
-                    sig[i] = sig[i].Replace("sig=", "signature=");
-                    sig[i] = Uri.UnescapeDataString(sig[i]);
-                    url[i] += "&" + sig[i];
-                    i++;
+                    quality[i] = quality[i].Substring(0, quality[i].IndexOf("\\u0026"));
                 }
+
+                quality[i] = dungus.Substring(dungus.IndexOf("quality=") + "quality=".Length);
+                if (quality[i].Contains("\\u0026"))
+                {
+                    quality[i] = quality[i].Substring(0, quality[i].IndexOf("\\u0026"));
+                }
+
+                // This value isn't being used for whatever reason
+                fallback_host[i] = dungus.Substring(dungus.IndexOf("fallback_host=") + "fallback_host=".Length);
+                if (fallback_host[i].Contains("\\u0026"))
+                {
+                    fallback_host[i] = fallback_host[i].Substring(0, fallback_host[i].IndexOf("\\u0026"));
+                }
+
+                type[i] = dungus.Substring(dungus.IndexOf("type=") + "type=".Length);
+                if (type[i].Contains("\\u0026"))
+                {
+                    type[i] = type[i].Substring(0, type[i].IndexOf("\\u0026"));
+                }
+
+                url[i] = dungus.Substring(dungus.IndexOf("url=") + "url=".Length);
+                if (url[i].Contains("\\u0026"))
+                {
+                    url[i] = url[i].Substring(0, url[i].IndexOf("\\u0026"));
+                }
+
+                sig[i] = dungus.Substring(dungus.IndexOf("sig=") + "sig=".Length);
+                if (sig[i].Contains("\\u0026"))
+                {
+                    sig[i] = sig[i].Substring(0, sig[i].IndexOf("\\u0026"));
+                }
+
+                url[i] = Uri.UnescapeDataString(url[i]);
+                sig[i] = Uri.UnescapeDataString(sig[i]);
+                url[i] += "&signature=" + sig[i];
+
+                i++;
             }
 
             foreach (var qualitylevel in url)
@@ -538,7 +540,7 @@ namespace SubBuddy
                     return qualitylevel;
                 }
             }
-            //Debug.WriteLine("Nothing?");
+            Debug.WriteLine("Nothing?");
             return url[0];
         }
 
@@ -567,6 +569,11 @@ namespace SubBuddy
 
             for (int page = 1; page < amount; page+=25)
             {
+                if (page > 976)
+                {
+                    break;
+                }
+
                 XmlReader reader = XmlReader.Create("http://gdata.youtube.com/feeds/api/users/" + user + "/subscriptions?start-index="+page);
                 SyndicationFeed subs = SyndicationFeed.Load(reader);
 
@@ -574,9 +581,19 @@ namespace SubBuddy
                 {
                     String subText;
                     
-                    subText = sub.Title.Text;
-                    subText = subText.Substring(subText.IndexOf(":") + 2);
-                    
+                    subText = sub.Links[2].Uri.ToString();
+
+                    if (subText.LastIndexOf("/") > subText.IndexOf("UC"))
+                    {
+                        int dringus = subText.IndexOf("UC");
+                        int drungul = subText.LastIndexOf("/");
+                        subText = subText.Substring(dringus, drungul-dringus);
+                    }
+                    else
+                    {
+                        subText = subText.Substring(subText.IndexOf("UC"));
+                    }
+
                     if (!localSubs.Contains(subText))
                     {
                         subsList[i] = subText; // I'm keeping this in memory for debugging purposes.
@@ -586,6 +603,11 @@ namespace SubBuddy
                     i++;
                 }
                 reader.Close();
+
+                if (page > 976)
+                {
+                    break;
+                }
             }
 
             MessageBox.Show("Sync Completed!");
