@@ -31,12 +31,12 @@ namespace SubBuddy
 
         private void LocalSubs_Load(object sender, EventArgs e)
         {
-            richTextBox1.Text = File.ReadAllText(CompatSettings.Default.Path + "localsubs");
+            richTextBox1.Text = File.ReadAllText(Settings.Default.Path + "localsubs");
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            System.IO.File.WriteAllText(CompatSettings.Default.Path + "localsubs", richTextBox1.Text+"\n");
+            System.IO.File.WriteAllText(Settings.Default.Path + "localsubs", richTextBox1.Text+"\n");
         }
 
     }

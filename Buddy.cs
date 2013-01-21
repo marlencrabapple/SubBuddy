@@ -31,64 +31,43 @@ namespace SubBuddy
         SyndicationFeed newVids;
         string currentextention;
         String[] ids;
-        //String[] subscriptions;
-        //String[] localsubscriptions;
         String[] names;
-        String[] itag;
-        String[] quality;
-        String[] fallback_host;
-        String[] type;
-        String[] url;
-        String[] sig;
         String[] titles;
-        //String[] cookies;
         String username;
-        //String user;
         String password;
         String whichApp;
-        //String homePath;
         Main window;
-        //int downloadamount;
         int localMode=0;
 
-        private void threadHelper(object sender, System.EventArgs e)
+        public void watch(String username1, String password1, String context, Main ui, int fromSelf)
         {
-            watch(username, password, "", window);
-        }
-
-        public void watch(String username1, String password1, String context, Main ui)
-        {
-            ui.EnableButton(false);
-            ui.set_button1_text("Watching...");
-            setVars(username1, password1, context, ui);
-            //checkDirs(); // apparently this isn't necessary anymore.
-
-            if (password1 != "")
+            if (fromSelf != 1)
             {
-                //login();
-                // One day I'll get to implementing this...
+                writeToLog("Started Watching.");
+                ui.EnableButton(false);
+                ui.set_button1_text("Watching...");
+                setVars(username1, password1, context, ui);
+            
+                if (password1 != "")
+                {
+                    //login();
+                    // One day I'll get to implementing this...
+                }
             }
 
             readAndParse();
             downloadVids();
-            ui.set_statusbar_text("Idle");
-            //ui.EnableButton(true);
-            //ui.set_button1_text("Watch");
-            int subdelay = Convert.ToInt32(CompatSettings.Default.Delay * 1000) * 60;
-            window.set_statusbar_text("Waiting " + CompatSettings.Default.Delay.ToString() + " minute(s)...");
-            List<string> nothing = new List<string>();
-            window.set_list_text(nothing);
-            //System.Windows.Forms.Timer aTimer = new System.Windows.Forms.Timer();
-            //aTimer.Interval = subdelay;
-            //aTimer.Tick +=new EventHandler(threadHelper);
-            //aTimer.Start();
-            Thread.Sleep(subdelay); // Now we only use one thread
-            watch(username, password, "", window);
+            ui.set_statusbar_text("Waiting " + Settings.Default.Delay.ToString() + " minute(s)...");
+            ui.set_list_text(new List<string>());
+            Thread.Sleep(Convert.ToInt32(Settings.Default.Delay * 1000) * 60);
+            Console.WriteLine("Waited: " + Convert.ToInt32(Settings.Default.Delay * 1000) * 60);
+            ui.newThread();
+            //watch(username, password, "", ui,1);
         }
 
         public void setQueueDownloaded(String username1, String password1, String context, Main ui)
         {
-            String databasepath = CompatSettings.Default.Path + "downloaded";
+            String databasepath = Settings.Default.Path + "downloaded";
             String[] dungus = File.ReadAllLines(databasepath);
             setVars(username1, password1, context, ui);
             getQueue();
@@ -109,12 +88,12 @@ namespace SubBuddy
             whichApp = context;
             window = ui;
 
-            if (CompatSettings.Default.SubscriptionType==1)
+            if (Settings.Default.SubscriptionType==1)
             {
                 localMode = 1;
             }
 
-            if (CompatSettings.Default.SubscriptionType==2)
+            if (Settings.Default.SubscriptionType==2)
             {
                 localMode = 2;
             }
@@ -130,20 +109,19 @@ namespace SubBuddy
             // Local Subs
             if (localMode==1 || localMode==2)
             {
-                String[] dengus = File.ReadAllLines(CompatSettings.Default.Path + "localsubs");
+                String[] dengus = File.ReadAllLines(Settings.Default.Path + "localsubs");
                 List<string> newVidsList = new List<string>();
 
                 for (int i = 0; i < dengus.Length; i++)
                 {
-                    XmlReader reader = XmlReader.Create("http://gdata.youtube.com/feeds/api/users/" + dengus[i] + "/uploads?max-results=" + CompatSettings.Default.DownloadQueue);
+                    XmlReader reader = XmlReader.Create("http://gdata.youtube.com/feeds/api/users/" + dengus[i] + "/uploads?max-results=" + Settings.Default.DownloadQueue);
                     newVids = SyndicationFeed.Load(reader);
+                    reader.Close();
 
                     foreach (var item in newVids.Items)
                     {
                         newVidsList.Add(item.Title.Text);
                     }
-
-                    reader.Close();
                 }
 
                 ids = new String[newVidsList.Count];
@@ -156,8 +134,9 @@ namespace SubBuddy
 
                 for (int i = 0; i < dengus.Length; i++)
                 {
-                    XmlReader reader = XmlReader.Create("http://gdata.youtube.com/feeds/api/users/" + dengus[i] + "/uploads?max-results=" + CompatSettings.Default.DownloadQueue);
+                    XmlReader reader = XmlReader.Create("http://gdata.youtube.com/feeds/api/users/" + dengus[i] + "/uploads?max-results=" + Settings.Default.DownloadQueue);
                     newVids = SyndicationFeed.Load(reader);
+                    reader.Close();
 
                     foreach (var item in newVids.Items)
                     {
@@ -178,8 +157,6 @@ namespace SubBuddy
 
                         i2++;
                     }
-
-                    reader.Close();
                 }
 
                 window.set_list_text(newVidsList);
@@ -194,8 +171,7 @@ namespace SubBuddy
         }
 
         public void getAndSetFeed(){
-            XmlReader reader;
-            reader = XmlReader.Create("http://gdata.youtube.com/feeds/api/users/" + username + "/newsubscriptionvideos?max-results=" + CompatSettings.Default.DownloadQueue);
+            XmlReader reader = XmlReader.Create("http://gdata.youtube.com/feeds/api/users/" + username + "/newsubscriptionvideos?max-results=" + Settings.Default.DownloadQueue); ;
             newVids = SyndicationFeed.Load(reader);
             reader.Close();
         }
@@ -209,15 +185,15 @@ namespace SubBuddy
                 newVidsList.Add("Error");
             }
 
-            // ghetto exception handling
             while (true)
             {
                 try
                 {
                     getAndSetFeed();
                 }
-                catch
+                catch (XmlException e)
                 {
+                    writeToLog(e.ToString());
                     continue;
                 }
                 break;
@@ -253,25 +229,22 @@ namespace SubBuddy
 
         public void downloadVids()
         {
-            WebClient wc = new WebClient();
             int i = 0;
+            
+            String databasepath = Settings.Default.Path + "/downloaded";
+            String blacklistpath = Settings.Default.Path + "/blacklist";
+            String synonymspath = Settings.Default.Path + "/synonyms";
+
+            trimDownloadedLog(databasepath);
 
             foreach (var video in ids)
             {
                 window.set_statusbar_text("Waiting to download video " + (i + 1) + "/" + ids.Length + ": " + titles[i]);
 
                 // check if id is in file before downloading
-                String databasepath = CompatSettings.Default.Path + "/downloaded";
-                String blacklistpath = CompatSettings.Default.Path + "/blacklist";
-                String synonymspath = CompatSettings.Default.Path + "/synonyms";
                 String[] dungus = File.ReadAllLines(databasepath);
                 String[] dongus = File.ReadAllLines(blacklistpath);
                 String[] dengus = File.ReadAllLines(synonymspath);
-
-                Debug.Write(dungus.ToString() + "\n");
-                Debug.Write(ids[i].ToString() + "\n");
-                Debug.Write(i.ToString() + "\n");
-                Debug.Write(video.ToString() + "\n");
 
                 if (!dungus.Contains<string>(video))
                 {
@@ -287,20 +260,20 @@ namespace SubBuddy
 
                         while (pruppets == true)
                         {
-                            String degrengos = GetDownloadLink("http://www.youtube.com/watch?v=" + video, "");
+                            int attempts = 0;
+                            String degrengos = getDownloadLink("http://www.youtube.com/watch?v=" + video);
 
                             if (degrengos != "turkey") // Checks if there were no problems with the video page (needs NSFW handler)
                             {
                                 Uri downloadlink = new Uri(degrengos);
-
-                                String videopath = CompatSettings.Default.Path + "/" + names[i] + " - " + titles[i] + " - " + video + currentextention;
+                                String videopath = Settings.Default.Path + "/" + names[i] + " - " + titles[i] + " - " + video + currentextention;
 
                                 // Account synonyms
                                 foreach (String turkey in dengus)
                                 {
                                     if (turkey.Contains(names[i]))
                                     {
-                                        videopath = CompatSettings.Default.Path + "/" + turkey + "/" + names[i] + " - " + titles[i] + " - " + video + currentextention;
+                                        videopath = Settings.Default.Path + "/" + turkey + "/" + names[i] + " - " + titles[i] + " - " + video + currentextention;
                                     }
                                 }
 
@@ -309,19 +282,32 @@ namespace SubBuddy
                                 // Hopefully this works
                                 try
                                 {
-                                    wc.DownloadFile(downloadlink, videopath);
+                                    if (attempts <= 5)
+                                    {
+                                        WebClient wc = new WebClient();
+                                        wc.DownloadFile(downloadlink, videopath);
+                                        wc.Dispose();
+                                    }
                                     pruppets = false;
                                 }
                                 catch (System.Net.WebException e)
                                 {
-                                    Debug.Write(e);
+                                    writeToLog(e.ToString());
                                     pruppets = true;
+                                    attempts++;
                                     continue;
                                 }
                             }
 
-                            // After download write downloaded id to file
-                            System.IO.File.AppendAllText(databasepath, video + "\n");
+                            if (attempts <= 5)
+                            {
+                                // After download write downloaded id to file
+                                File.AppendAllText(databasepath, video + "\n");
+                            }
+                            else
+                            {
+                                writeToLog("Couldn't download \"" + names[i] + " - " + titles[i] + " - " + video + currentextention + "\" after 5 attempts.");
+                            }
                         }
                     }
                     else
@@ -332,42 +318,46 @@ namespace SubBuddy
                 else
                 {
                     window.set_statusbar_text("Already downloaded video " + (i + 1) + "/" + ids.Length + ": " + titles[i]);
-                    Thread.Sleep(50);
+                    Thread.Sleep(30);
                 }
                 i++;
             }
-            List<string> nothing = new List<string>();
-            window.set_list_text(nothing);
         }
 
-        public string GetDownloadLink(String sourceurl, String format)
+        public string getDownloadLink(String sourceurl)
         {
-            WebClient wc = new WebClient();
             String source;
 
             while (true)
             {
                 try
                 {
+                    WebClient wc = new WebClient();
                     source = wc.DownloadString(sourceurl);
+                    wc.Dispose();
+                    source = System.Web.HttpUtility.HtmlDecode(source);
                 }
-                catch
+                catch (System.Net.WebException e)
                 {
+                    writeToLog(e.ToString());
                     continue;
                 }
 
                 break;
             }
 
-            source = System.Web.HttpUtility.HtmlDecode(source);
-
-            // Fixes bad video crashes (There will be more for NSFW and Private vids once SubBuddy detects one)
+            // Fixes bad video crashes
             if (source.Contains("This video is currently being processed"))
             {
                 return "turkey";
             }
 
             if (source.Contains("This video is unavailable"))
+            {
+                return "turkey";
+            }
+
+            if (source.Contains("This video may be inappropriate for some users."))
             {
                 return "turkey";
             }
@@ -403,28 +393,21 @@ namespace SubBuddy
                 }
             }
 
-            // fixes crashes that started in july/august 2012
+            // Fixes crashes that started in july/august 2012
             if (fdsa[0].StartsWith(" \"url_encoded_fmt_stream_map\":"))
             {
                 fdsa[0] = fdsa[0].Replace(" \"url_encoded_fmt_stream_map\": \"", "");
             }
-            else
-            {
-                // I'm not entirely sure what I was doing here
-                //start = fdsa[0].IndexOf("url=");
-                //fdsa[0] = fdsa[0].Substring(start);
-            }
 
-            itag = new String[fdsa.Length];
-            quality = new String[fdsa.Length];
-            fallback_host = new String[fdsa.Length];
-            type = new String[fdsa.Length];
-            url = new String[fdsa.Length];
-            sig = new String[fdsa.Length];
+            String[] itag = new String[fdsa.Length];
+            String[] quality = new String[fdsa.Length];
+            String[] fallback_host = new String[fdsa.Length];
+            String[] type = new String[fdsa.Length];
+            String[] url = new String[fdsa.Length];
+            String[] sig = new String[fdsa.Length];
 
             i = 0;
 
-            // Why does it seem like Google is designing fixes to thwart -my- program?
             foreach (var dungus in fdsa)
             {
                 itag[i] = dungus.Substring(dungus.IndexOf("itag=") + "itag=".Length);
@@ -445,7 +428,7 @@ namespace SubBuddy
                     quality[i] = quality[i].Substring(0, quality[i].IndexOf("\\u0026"));
                 }
 
-                // This value isn't being used for whatever reason
+                // This could probably prevent a lot of crashes...
                 fallback_host[i] = dungus.Substring(dungus.IndexOf("fallback_host=") + "fallback_host=".Length);
                 if (fallback_host[i].Contains("\\u0026"))
                 {
@@ -553,7 +536,7 @@ namespace SubBuddy
             int i=0;
             WebClient wc = new WebClient();
             String source = wc.DownloadString("http://gdata.youtube.com/feeds/api/users/" + user + "/subscriptions");
-            String localSubs = File.ReadAllText(CompatSettings.Default.Path + "localsubs");
+            String localSubs = File.ReadAllText(Settings.Default.Path + "localsubs");
             
             String[] subsList;
 
@@ -597,7 +580,7 @@ namespace SubBuddy
                     if (!localSubs.Contains(subText))
                     {
                         subsList[i] = subText; // I'm keeping this in memory for debugging purposes.
-                        System.IO.File.AppendAllText(CompatSettings.Default.Path + "localsubs", subsList[i]+"\n");
+                        System.IO.File.AppendAllText(Settings.Default.Path + "localsubs", subsList[i]+"\n");
                     }
 
                     i++;
@@ -613,6 +596,29 @@ namespace SubBuddy
             MessageBox.Show("Sync Completed!");
             ui.set_statusbar_text("Idle");
             wc.Dispose();
+        }
+
+        public void writeToLog(String message)
+        {
+            File.AppendAllText(Settings.Default.Path + "/errorlog", "[" + System.DateTime.Now.ToShortDateString() + " " + System.DateTime.Now.ToShortTimeString() + "]\n" + message + "\n\n");
+        }
+
+        public void trimDownloadedLog(String databasepath)
+        {
+            List<String> newDownloaded = new List<String>();
+
+            foreach(String id in File.ReadAllLines(databasepath))
+            {
+                foreach (String downloadedId in ids)
+                {
+                    if(id.Equals(downloadedId))
+                    {
+                        newDownloaded.Add(id);
+                    }
+                }
+            }
+
+            File.WriteAllLines(databasepath,newDownloaded.ToArray());
         }
     }
 }

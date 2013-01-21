@@ -26,14 +26,14 @@ namespace SubBuddy
         public Options()
         {
             InitializeComponent();
-            textBox1.Text = CompatSettings.Default.Path;
-            comboBox2.SelectedIndex = CompatSettings.Default.SubscriptionType;
-            comboBox1.SelectedIndex = CompatSettings.Default.Thumbnails;
-            textBox2.Text = CompatSettings.Default.Naming;
-            numericUpDown1.Value = CompatSettings.Default.Delay;
+            textBox1.Text = Settings.Default.Path;
+            comboBox2.SelectedIndex = Settings.Default.SubscriptionType;
+            comboBox1.SelectedIndex = Settings.Default.Thumbnails;
+            textBox2.Text = Settings.Default.Naming;
+            numericUpDown1.Value = Settings.Default.Delay;
             textBox2.Enabled = false;
             comboBox1.Enabled = false;
-            numericUpDown2.Value = CompatSettings.Default.DownloadQueue;
+            numericUpDown2.Value = Settings.Default.DownloadQueue;
         }
 
         private void Form2_Load(object sender, EventArgs e)
@@ -70,22 +70,22 @@ namespace SubBuddy
 
         private void button1_Click(object sender, EventArgs e)
         {
-            CompatSettings.Default.Delay = numericUpDown1.Value;
-            CompatSettings.Default.DownloadQueue = numericUpDown2.Value;
-            CompatSettings.Default.SubscriptionType = comboBox2.SelectedIndex;
-            CompatSettings.Default.Thumbnails = comboBox1.SelectedIndex;
-            CompatSettings.Default.Naming = textBox2.Text;
+            Settings.Default.Delay = numericUpDown1.Value;
+            Settings.Default.DownloadQueue = numericUpDown2.Value;
+            Settings.Default.SubscriptionType = comboBox2.SelectedIndex;
+            Settings.Default.Thumbnails = comboBox1.SelectedIndex;
+            Settings.Default.Naming = textBox2.Text;
             
-            if (!CompatSettings.Default.Path.EndsWith("/SubBuddy/"))
+            if (!Settings.Default.Path.EndsWith("/SubBuddy/"))
             {
-                CompatSettings.Default.Path = textBox1.Text + "/SubBuddy/";
+                Settings.Default.Path = textBox1.Text + "/SubBuddy/";
             }
             else
             {
-                CompatSettings.Default.Path = textBox1.Text;
+                Settings.Default.Path = textBox1.Text;
             }
 
-            CompatSettings.Default.Save();
+            Settings.Default.Save();
         }
 
         private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)

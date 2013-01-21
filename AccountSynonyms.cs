@@ -19,15 +19,15 @@ namespace SubBuddy
 
         private void AccountSynonyms_Load(object sender, EventArgs e)
         {
-            if (File.ReadAllText(CompatSettings.Default.Path + "synonyms") != "")
+            if (File.ReadAllText(Settings.Default.Path + "synonyms") != "")
             {
-                richTextBox1.Text = File.ReadAllText(CompatSettings.Default.Path + "synonyms");
+                richTextBox1.Text = File.ReadAllText(Settings.Default.Path + "synonyms");
             }
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            System.IO.File.WriteAllText(CompatSettings.Default.Path + "synonyms", richTextBox1.Text);
+            System.IO.File.WriteAllText(Settings.Default.Path + "synonyms", richTextBox1.Text);
         }
     }
 }

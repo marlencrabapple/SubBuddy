@@ -28,7 +28,8 @@ namespace SubBuddy
         delegate void SetTextCallback(string text);
 
         public static Buddy buddy = new Buddy();
-        //public static String versionNumber = "0.2.3.3";
+        int internalCheckChange = 0;
+        String body;
 
         public Main()
         {
@@ -37,14 +38,33 @@ namespace SubBuddy
 
         private void DoEet()
         {
-            buddy.watch(Username.Text, Password.Text, "", this);
+            if (body.Equals("ready"))
+            {
+                buddy.watch(Username.Text, Password.Text, "", this, 1);
+            }
+            else
+            {
+                buddy.watch(Username.Text, Password.Text, "", this, 0);
+            }
+        }
+
+        private void readyBody()
+        {
+            Thread t = new Thread(DoEet);
+            t.IsBackground = true;
+            t.Start();
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            Thread t = new Thread(new ThreadStart(DoEet));
-            t.IsBackground = true;
-            t.Start();
+            body = "";
+            readyBody();
+        }
+
+        public void newThread()
+        {
+            body = "ready";
+            this.Invoke(new MethodInvoker(delegate { readyBody(); }));
         }
 
         private void optionsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -55,7 +75,7 @@ namespace SubBuddy
 
         private void openDownloadsFolderToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            System.Diagnostics.Process.Start(CompatSettings.Default.Path + "/");
+            System.Diagnostics.Process.Start(Settings.Default.Path + "/");
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -99,59 +119,71 @@ namespace SubBuddy
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
-            if (Remember.Checked == true)
+            if (internalCheckChange == 0)
             {
-                CompatSettings.Default.Username = Username.Text;
-                CompatSettings.Default.Password = Password.Text;
-                CompatSettings.Default.Remember = true;
-                CompatSettings.Default.Save();
-            }
-            if (Remember.Checked == false)
-            {
-                CompatSettings.Default.Remember = false;
-                CompatSettings.Default.Username = "";
-                CompatSettings.Default.Password = "";
-                CompatSettings.Default.Save();
+                if (Remember.Checked == true)
+                {
+                    Settings.Default.Username = Username.Text;
+                    Settings.Default.Password = Password.Text;
+                    Settings.Default.Remember = true;
+                    Settings.Default.Save();
+                }
+                if (Remember.Checked == false)
+                {
+                    Settings.Default.Remember = false;
+                    Settings.Default.Username = "";
+                    Settings.Default.Password = "";
+                    Settings.Default.Save();
+                }
             }
         }
+
         private void Main_Load(object sender, EventArgs e)
         {
-            if (CompatSettings.Default.Path == "")
+            if (Settings.Default.Path == "")
             {
                 MessageBox.Show("It seems as though this is SubBuddy's first launch. Please configure all enabled options before using the program.");
                 Options options = new Options();
                 options.ShowDialog();
             }
 
-            Username.Text = CompatSettings.Default.Username;
-            Password.Text = CompatSettings.Default.Password;
-
-            if (!Directory.Exists(CompatSettings.Default.Path))
+            if (Settings.Default.Remember == true)
             {
-                Directory.CreateDirectory(CompatSettings.Default.Path);
+                // I should really learn a bit more about C# before I implement terrible solutions like this.
+                internalCheckChange = 1;
+                Remember.Checked = true;
+                internalCheckChange = 0;
             }
 
-            if (!File.Exists(CompatSettings.Default.Path + "/downloaded"))
+            Username.Text = Settings.Default.Username;
+            Password.Text = Settings.Default.Password;
+
+            if (!Directory.Exists(Settings.Default.Path))
             {
-                FileStream myStream = File.Create(CompatSettings.Default.Path + "/downloaded");
+                Directory.CreateDirectory(Settings.Default.Path);
+            }
+
+            if (!File.Exists(Settings.Default.Path + "/downloaded"))
+            {
+                FileStream myStream = File.Create(Settings.Default.Path + "/downloaded");
                 myStream.Flush();
                 myStream.Close();
             }
-            if (!File.Exists(CompatSettings.Default.Path + "/blacklist"))
+            if (!File.Exists(Settings.Default.Path + "/blacklist"))
             {
-                FileStream myStream = File.Create(CompatSettings.Default.Path + "/blacklist");
+                FileStream myStream = File.Create(Settings.Default.Path + "/blacklist");
                 myStream.Flush();
                 myStream.Close();
             }
-            if (!File.Exists(CompatSettings.Default.Path + "/localsubs"))
+            if (!File.Exists(Settings.Default.Path + "/localsubs"))
             {
-                FileStream myStream = File.Create(CompatSettings.Default.Path + "/localsubs");
+                FileStream myStream = File.Create(Settings.Default.Path + "/localsubs");
                 myStream.Flush();
                 myStream.Close();
             }
-            if (!File.Exists(CompatSettings.Default.Path + "/synonyms"))
+            if (!File.Exists(Settings.Default.Path + "/synonyms"))
             {
-                FileStream myStream = File.Create(CompatSettings.Default.Path + "/synonyms");
+                FileStream myStream = File.Create(Settings.Default.Path + "/synonyms");
                 myStream.Flush();
                 myStream.Close();
             }
@@ -181,7 +213,7 @@ namespace SubBuddy
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            AboutBox1 about = new AboutBox1();
+            About about = new About();
             about.ShowDialog();
         }
 

@@ -31,12 +31,12 @@ namespace SubBuddy
 
         private void Blacklist_Load(object sender, EventArgs e)
         {
-            richTextBox1.Text = File.ReadAllText(CompatSettings.Default.Path + "blacklist");
+            richTextBox1.Text = File.ReadAllText(Settings.Default.Path + "blacklist");
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            System.IO.File.WriteAllText(CompatSettings.Default.Path + "blacklist", richTextBox1.Text);
+            System.IO.File.WriteAllText(Settings.Default.Path + "blacklist", richTextBox1.Text);
         }
     }
 }
