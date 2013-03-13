@@ -20,6 +20,8 @@ using System.Text;
 using System.Windows.Forms;
 using System.Threading;
 using System.IO;
+using System.Net;
+using System.Reflection;
 
 namespace SubBuddy
 {
@@ -140,6 +142,8 @@ namespace SubBuddy
 
         private void Main_Load(object sender, EventArgs e)
         {
+            updateCheck(false);
+
             if (Settings.Default.Path == "")
             {
                 MessageBox.Show("It seems as though this is SubBuddy's first launch. Please configure all enabled options before using the program.");
@@ -236,6 +240,41 @@ namespace SubBuddy
         private void skipCurrentQueueToolStripMenuItem_Click(object sender, EventArgs e)
         {
             buddy.setQueueDownloaded(Username.Text, Password.Text, "", this);
+        }
+
+        private void checkForUpdatesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            updateCheck(true);
+        }
+
+        private void updateCheck(bool verbose)
+        {
+            WebClient wc = new WebClient();
+            String mostRecentUpdate = "";
+            
+            try
+            {
+                mostRecentUpdate = wc.DownloadString("http://onlinebargainshrimptoyourdoor.com/current");
+            }
+            catch (WebException e)
+            {
+                MessageBox.Show("Subbuddy failed to check for updates.");
+            }
+            
+            wc.Dispose();
+
+            if (mostRecentUpdate != "")
+            {
+                String[] mostRecentUpdateArray = mostRecentUpdate.Split('|');
+                if (mostRecentUpdateArray[0] != Assembly.GetExecutingAssembly().GetName().Version.ToString())
+                {
+                    MessageBox.Show("A new version of SubBuddy is available. Please check http://onlinebargainshrimptoyourdoor.com/ for details.");
+                }
+                else
+                {
+                    if (verbose) { MessageBox.Show("You are already using the most recent version of SubBuddy."); }
+                }
+            }
         }
     }
 }

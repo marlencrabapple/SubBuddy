@@ -32,8 +32,11 @@ namespace SubBuddy
             textBox2.Text = Settings.Default.Naming;
             numericUpDown1.Value = Settings.Default.Delay;
             textBox2.Enabled = false;
-            comboBox1.Enabled = false;
+            //comboBox1.Enabled = true;
+            //comboBox1.SelectedIndex = 3;
             numericUpDown2.Value = Settings.Default.DownloadQueue;
+            numericUpDown3.Value = Settings.Default.MaxDownloads;
+            checkBox1.Checked = Settings.Default.Async;
         }
 
         private void Form2_Load(object sender, EventArgs e)
@@ -75,6 +78,8 @@ namespace SubBuddy
             Settings.Default.SubscriptionType = comboBox2.SelectedIndex;
             Settings.Default.Thumbnails = comboBox1.SelectedIndex;
             Settings.Default.Naming = textBox2.Text;
+            Settings.Default.Async = checkBox1.Checked;
+            Settings.Default.MaxDownloads = numericUpDown3.Value;
             
             if (!Settings.Default.Path.EndsWith("/SubBuddy/"))
             {

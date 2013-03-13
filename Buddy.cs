@@ -29,7 +29,7 @@ namespace SubBuddy
     public class Buddy
     {
         SyndicationFeed newVids;
-        string currentextention;
+        public string currentextention;
         String[] ids;
         String[] names;
         String[] titles;
@@ -38,6 +38,8 @@ namespace SubBuddy
         String whichApp;
         Main window;
         int localMode=0;
+        List<string> currentlyDownloading = new List<string>();
+        downloadObject taargus;
 
         public void watch(String username1, String password1, String context, Main ui, int fromSelf)
         {
@@ -59,8 +61,14 @@ namespace SubBuddy
             downloadVids();
             ui.set_statusbar_text("Waiting " + Settings.Default.Delay.ToString() + " minute(s)...");
             ui.set_list_text(new List<string>());
+
+            if ((Settings.Default.Async) && (currentlyDownloading.Count > 0))
+            {
+                window.set_statusbar_text("Downloading " + currentlyDownloading.Count + " video(s).");
+            }
+
             Thread.Sleep(Convert.ToInt32(Settings.Default.Delay * 1000) * 60);
-            Console.WriteLine("Waited: " + Convert.ToInt32(Settings.Default.Delay * 1000) * 60);
+            //Console.WriteLine("Waited: " + Convert.ToInt32(Settings.Default.Delay * 1000) * 60);
             ui.newThread();
             //watch(username, password, "", ui,1);
         }
@@ -114,9 +122,21 @@ namespace SubBuddy
 
                 for (int i = 0; i < dengus.Length; i++)
                 {
-                    XmlReader reader = XmlReader.Create("http://gdata.youtube.com/feeds/api/users/" + dengus[i] + "/uploads?max-results=" + Settings.Default.DownloadQueue);
-                    newVids = SyndicationFeed.Load(reader);
-                    reader.Close();
+                    while (true)
+                    {
+                        try
+                        {
+                            XmlReader reader = XmlReader.Create("http://gdata.youtube.com/feeds/api/users/" + dengus[i] + "/uploads?max-results=" + Settings.Default.DownloadQueue);
+                            newVids = SyndicationFeed.Load(reader);
+                            reader.Close();
+                        }
+                        catch (WebException e)
+                        {
+                            writeToLog(e.ToString());
+                            continue;
+                        }
+                        break;
+                    }
 
                     foreach (var item in newVids.Items)
                     {
@@ -170,12 +190,6 @@ namespace SubBuddy
             }
         }
 
-        public void getAndSetFeed(){
-            XmlReader reader = XmlReader.Create("http://gdata.youtube.com/feeds/api/users/" + username + "/newsubscriptionvideos?max-results=" + Settings.Default.DownloadQueue); ;
-            newVids = SyndicationFeed.Load(reader);
-            reader.Close();
-        }
-
         public List<string> getQueue()
         {
             List<string> newVidsList = new List<string>();
@@ -189,9 +203,11 @@ namespace SubBuddy
             {
                 try
                 {
-                    getAndSetFeed();
+                    XmlReader reader = XmlReader.Create("http://gdata.youtube.com/feeds/api/users/" + username + "/newsubscriptionvideos?max-results=" + Settings.Default.DownloadQueue); ;
+                    newVids = SyndicationFeed.Load(reader);
+                    reader.Close();
                 }
-                catch (XmlException e)
+                catch (WebException e)
                 {
                     writeToLog(e.ToString());
                     continue;
@@ -235,7 +251,7 @@ namespace SubBuddy
             String blacklistpath = Settings.Default.Path + "/blacklist";
             String synonymspath = Settings.Default.Path + "/synonyms";
 
-            trimDownloadedLog(databasepath);
+            //trimDownloadedLog(databasepath);
 
             foreach (var video in ids)
             {
@@ -246,7 +262,7 @@ namespace SubBuddy
                 String[] dongus = File.ReadAllLines(blacklistpath);
                 String[] dengus = File.ReadAllLines(synonymspath);
 
-                if (!dungus.Contains<string>(video))
+                if ((!dungus.Contains<string>(video))&&(!currentlyDownloading.Contains(video)))
                 {
                     foreach (char c in System.IO.Path.GetInvalidFileNameChars())
                     {
@@ -261,7 +277,23 @@ namespace SubBuddy
                         while (pruppets == true)
                         {
                             int attempts = 0;
-                            String degrengos = getDownloadLink("http://www.youtube.com/watch?v=" + video);
+                            String degrengos = "turkey";
+
+                            if (Settings.Default.Async)
+                            {
+                                if ((currentlyDownloading.Contains(video)) || (currentlyDownloading.Count >= Settings.Default.MaxDownloads))
+                                {
+                                    degrengos = "turkey";
+                                }
+                                else
+                                {
+                                    degrengos = getDownloadLink("http://www.youtube.com/watch?v=" + video);
+                                }
+                            }
+                            else
+                            {
+                                degrengos = getDownloadLink("http://www.youtube.com/watch?v=" + video);
+                            }
 
                             if (degrengos != "turkey") // Checks if there were no problems with the video page (needs NSFW handler)
                             {
@@ -277,16 +309,51 @@ namespace SubBuddy
                                     }
                                 }
 
-                                window.set_statusbar_text("Downloading video " + (i + 1) + "/" + ids.Length + ": " + titles[i]);
-                                
+                                bool dispalyAsyncDownloadStatus = false;
+
+                                if (Settings.Default.Async == true)
+                                {
+                                    dispalyAsyncDownloadStatus = true;
+                                    //window.set_statusbar_text("Downloading " + currentlyDownloading.Count + " video(s).");
+                                }
+                                else
+                                {
+                                    window.set_statusbar_text("Downloading video " + (i + 1) + "/" + ids.Length + ": " + titles[i]);
+                                }
+
                                 // Hopefully this works
                                 try
                                 {
                                     if (attempts <= 5)
                                     {
-                                        WebClient wc = new WebClient();
-                                        wc.DownloadFile(downloadlink, videopath);
-                                        wc.Dispose();
+                                        if (Settings.Default.Async == true)
+                                        {
+                                            if (currentlyDownloading.Count < Settings.Default.MaxDownloads)
+                                            {
+                                                //wc.DownloadFileAsync(downloadlink, videopath);
+                                                //downloadObject taargus;
+                                                taargus.downloadlink = downloadlink;
+                                                taargus.id = video;
+                                                taargus.downloadpath = videopath;
+                                                //downloadAsync(taargus);
+
+                                                Thread t = new Thread(downloadAsync);
+                                                t.Start();
+                                            }
+                                        }
+                                        else
+                                        {
+                                            WebClient wc = new WebClient();
+                                            wc.DownloadFile(downloadlink, videopath);
+
+                                            // for thumbnail downloading
+                                            taargus.downloadlink = downloadlink;
+                                            taargus.id = video;
+                                            taargus.downloadpath = videopath;
+
+                                            downloadThumbnails(taargus);
+                                            wc.Dispose();
+                                        }
                                     }
                                     pruppets = false;
                                 }
@@ -298,11 +365,19 @@ namespace SubBuddy
                                     continue;
                                 }
                             }
+                            else
+                            {
+                                continue;
+                            }
 
                             if (attempts <= 5)
                             {
                                 // After download write downloaded id to file
-                                File.AppendAllText(databasepath, video + "\n");
+                                if (Settings.Default.Async == false)
+                                {
+                                    Debug.WriteLine(Settings.Default.Async);
+                                    File.AppendAllText(databasepath, video + "\n");
+                                }
                             }
                             else
                             {
@@ -322,6 +397,99 @@ namespace SubBuddy
                 }
                 i++;
             }
+        }
+
+        public struct downloadObject
+        {
+            public string id;
+            public string downloadpath;
+            public Uri downloadlink;
+
+            public downloadObject(string setId, string setPath, Uri setLink)
+            {
+                id = setId;
+                downloadlink = setLink;
+                downloadpath = setPath;
+            }
+        }
+
+        public void downloadAsync()
+        {
+            bool success = true;
+            String databasepath = Settings.Default.Path + "/downloaded";
+            downloadObject paynus = taargus;
+
+            if ((currentlyDownloading.Contains(paynus.id) == false) && (currentlyDownloading.Count() < Settings.Default.MaxDownloads))
+            {
+                currentlyDownloading.Add(paynus.id);
+                window.set_statusbar_text("Downloading " + currentlyDownloading.Count + " video(s).");
+                WebClient wc = new WebClient();
+               
+                try
+                {
+                    wc.DownloadFile(paynus.downloadlink, paynus.downloadpath);
+                    downloadThumbnails(paynus);
+                }
+                catch(WebException e)
+                {
+                    writeToLog(e.ToString());
+                    currentlyDownloading.Remove(paynus.id);
+                    success = false;
+                }
+               
+                wc.Dispose();
+
+                if (success)
+                {
+                    File.AppendAllText(databasepath, paynus.id + "\n");
+                    currentlyDownloading.Remove(paynus.id);
+                }
+
+                if (currentlyDownloading.Count == 0)
+                {
+                    window.set_statusbar_text("Waiting " + Settings.Default.Delay.ToString() + " minute(s)...");
+                }
+                else
+                {
+                    window.set_statusbar_text("Downloading " + currentlyDownloading.Count + " video(s).");
+                }
+            }
+        }
+
+        public void downloadThumbnails(downloadObject paynus)
+        {
+            WebClient wc = new WebClient();
+
+            while (true)
+            {
+                try
+                {
+                    if (Settings.Default.Thumbnails == 0)
+                    {
+                        wc.DownloadFile("https://img.youtube.com/vi/" + paynus.id + "/0.jpg", paynus.downloadpath + "_thumb-1.jpg");
+                        wc.DownloadFile("https://img.youtube.com/vi/" + paynus.id + "/1.jpg", paynus.downloadpath + "_thumb-2.jpg");
+                        wc.DownloadFile("https://img.youtube.com/vi/" + paynus.id + "/2.jpg", paynus.downloadpath + "_thumb-3.jpg");
+                        wc.DownloadFile("https://img.youtube.com/vi/" + paynus.id + "/3.jpg", paynus.downloadpath + "_thumb-4.jpg");
+                    }
+                    else if (Settings.Default.Thumbnails == 1)
+                    {
+                        wc.DownloadFile("https://img.youtube.com/vi/" + paynus.id + "/1.jpg", paynus.downloadpath + "_thumb-1.jpg");
+                    }
+                    else if (Settings.Default.Thumbnails == 2)
+                    {
+                        wc.DownloadFile("https://img.youtube.com/vi/" + paynus.id + "/0.jpg", paynus.downloadpath + "_thumb-1.jpg");
+                    }
+                }
+                catch (WebException e)
+                {
+                    writeToLog(e.ToString());
+                    continue;
+                }
+
+                break;
+            }
+
+            wc.Dispose();
         }
 
         public string getDownloadLink(String sourceurl)
@@ -362,9 +530,12 @@ namespace SubBuddy
                 return "turkey";
             }
 
-            int start = source.IndexOf("movie_player");
-            source = source.Substring(start);
-            start = source.IndexOf("flashvars");
+            //int start = source.IndexOf("movie_player");
+            //source = source.Substring(start);
+            //start = source.IndexOf("flashvars");
+            //source = source.Substring(start);
+           
+            int start = source.IndexOf("url_encoded_fmt_stream_map");
             source = source.Substring(start);
 
             String[] asdf;
@@ -606,6 +777,7 @@ namespace SubBuddy
         public void trimDownloadedLog(String databasepath)
         {
             List<String> newDownloaded = new List<String>();
+            int i = 0;
 
             foreach(String id in File.ReadAllLines(databasepath))
             {
@@ -615,6 +787,21 @@ namespace SubBuddy
                     {
                         newDownloaded.Add(id);
                     }
+                    else if(i>49){
+                        newDownloaded.Add(id);
+                    }
+
+                    i++;
+
+                    if (i >= 65)
+                    {
+                        break;
+                    }
+                }
+
+                if (i >= 65)
+                {
+                    break;
                 }
             }
 

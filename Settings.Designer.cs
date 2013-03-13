@@ -37,7 +37,7 @@ namespace SubBuddy {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("3")]
         public int Thumbnails {
             get {
                 return ((int)(this["Thumbnails"]));
@@ -128,6 +128,30 @@ namespace SubBuddy {
             }
             set {
                 this["DownloadQueue"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool Async {
+            get {
+                return ((bool)(this["Async"]));
+            }
+            set {
+                this["Async"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("3")]
+        public decimal MaxDownloads {
+            get {
+                return ((decimal)(this["MaxDownloads"]));
+            }
+            set {
+                this["MaxDownloads"] = value;
             }
         }
     }

@@ -69,8 +69,8 @@ namespace SubBuddy
             this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.Remember = new System.Windows.Forms.CheckBox();
             this.fileToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.skipCurrentQueueToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.statusStrip1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -152,10 +152,10 @@ namespace SubBuddy
             // 
             // checkForUpdatesToolStripMenuItem
             // 
-            this.checkForUpdatesToolStripMenuItem.Enabled = false;
             this.checkForUpdatesToolStripMenuItem.Name = "checkForUpdatesToolStripMenuItem";
             this.checkForUpdatesToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
             this.checkForUpdatesToolStripMenuItem.Text = "Check for Updates";
+            this.checkForUpdatesToolStripMenuItem.Click += new System.EventHandler(this.checkForUpdatesToolStripMenuItem_Click);
             // 
             // syncToolStripMenuItem
             // 
@@ -297,6 +297,13 @@ namespace SubBuddy
             this.fileToolStripMenuItem1.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem1.Text = "File";
             // 
+            // skipCurrentQueueToolStripMenuItem
+            // 
+            this.skipCurrentQueueToolStripMenuItem.Name = "skipCurrentQueueToolStripMenuItem";
+            this.skipCurrentQueueToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
+            this.skipCurrentQueueToolStripMenuItem.Text = "Skip Current Queue";
+            this.skipCurrentQueueToolStripMenuItem.Click += new System.EventHandler(this.skipCurrentQueueToolStripMenuItem_Click);
+            // 
             // menuStrip1
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -307,13 +314,6 @@ namespace SubBuddy
             this.menuStrip1.Size = new System.Drawing.Size(288, 24);
             this.menuStrip1.TabIndex = 20;
             this.menuStrip1.Text = "menuStrip1";
-            // 
-            // skipCurrentQueueToolStripMenuItem
-            // 
-            this.skipCurrentQueueToolStripMenuItem.Name = "skipCurrentQueueToolStripMenuItem";
-            this.skipCurrentQueueToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
-            this.skipCurrentQueueToolStripMenuItem.Text = "Skip Current Queue";
-            this.skipCurrentQueueToolStripMenuItem.Click += new System.EventHandler(this.skipCurrentQueueToolStripMenuItem_Click);
             // 
             // Main
             // 
