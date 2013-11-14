@@ -15,7 +15,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
-//using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Threading;
@@ -201,7 +200,7 @@ namespace SubBuddy
 
         private void syncToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            buddy.SubSync(Username.Text, this);
+            buddy.SubSync(Username.Text, Password.Text, this);
         }
 
         private void editToolStripMenuItem_Click(object sender, EventArgs e)
