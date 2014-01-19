@@ -636,37 +636,37 @@ namespace SubBuddy
                     continue;
                 }
 
-                if (source.Contains("\"adaptive_fmts\": \""))
+                if (source.Contains("\"adaptive_fmts\": \"") || (source.Contains("\"url_encoded_fmt_stream_map\"")))
                 {
                     break;
+                }
+
+                // Fixes bad video crashes
+                if (source.Contains("This video is currently being processed"))
+                {
+                    String[] error = { "turkey" };
+                    return error;
+                }
+
+                if (source.Contains("This video is unavailable"))
+                {
+                    if (source.Contains("<div id=\\\"player-unavailable\\\" class=\\\"    hid  \\\">"))
+                    {
+                        String[] error = { "turkey" };
+                        return error;
+                    }
+                }
+
+                if (source.Contains("This video may be inappropriate for some users."))
+                {
+                    String[] error = { "turkey" };
+                    return error;
                 }
 
                 System.Threading.Thread.Sleep(1000);
             }
 
-            // Fixes bad video crashes
-            if (source.Contains("This video is currently being processed"))
-            {
-                String[] error = { "turkey" };
-                return error;
-            }
-
-            if (source.Contains("This video is unavailable"))
-            {
-                if (source.Contains("<div id=\\\"player-unavailable\\\" class=\\\"    hid  \\\">"))
-                {
-                    String[] error = { "turkey" };
-                    return error;
-                }
-            }
-
-            if (source.Contains("This video may be inappropriate for some users."))
-            {
-                String[] error = { "turkey" };
-                return error;
-            }
-
-            int start = source.IndexOf("\"adaptive_fmts\": ") < source.IndexOf("\"url_encoded_fmt_stream_map\": ") ? source.IndexOf("\"adaptive_fmts\": ") : source.IndexOf("\"url_encoded_fmt_stream_map\": ");
+            int start = (source.IndexOf("\"adaptive_fmts\": ") < source.IndexOf("\"url_encoded_fmt_stream_map\": ") && (source.IndexOf("\"adaptive_fmts\": ") != -1)) ? source.IndexOf("\"adaptive_fmts\": ") : source.IndexOf("\"url_encoded_fmt_stream_map\": ");
 
             source = source.Substring(start);
 
