@@ -722,10 +722,20 @@ namespace SubBuddy
 
                 if (!url[i].Contains("signature"))
                 {
-                    sig[i] = dungus.Substring(dungus.IndexOf("sig=") + "sig=".Length);
-                    if (sig[i].Contains("\\u0026"))
+                    if (dungus.Contains("sig=")) {
+                        sig[i] = dungus.Substring(dungus.IndexOf("sig=") + "sig=".Length);
+                        if (sig[i].Contains("\\u0026"))
+                        {
+                            sig[i] = sig[i].Substring(0, sig[i].IndexOf("\\u0026"));
+                        }
+                    }
+                    else
                     {
-                        sig[i] = sig[i].Substring(0, sig[i].IndexOf("\\u0026"));
+                        sig[i] = dungus.Substring(dungus.IndexOf("s=") + "s=".Length);
+                        if (sig[i].Contains("\\u0026"))
+                        {
+                            sig[i] = sig[i].Substring(0, sig[i].IndexOf("\\u0026"));
+                        }
                     }
 
                     sig[i] = "&signature=" + Uri.UnescapeDataString(sig[i]);
